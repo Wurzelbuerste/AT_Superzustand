@@ -1,0 +1,97 @@
+options {
+  LOOKAHEAD = 1;
+  CHOICE_AMBIGUITY_CHECK = 2;
+  OTHER_AMBIGUITY_CHECK = 1;
+  STATIC = true;
+  DEBUG_PARSER = false;
+  DEBUG_LOOKAHEAD = false;
+  DEBUG_TOKEN_MANAGER = false;
+  ERROR_REPORTING = true;
+  JAVA_UNICODE_ESCAPE = false;
+  UNICODE_INPUT = false;
+  IGNORE_CASE = false;
+  USER_TOKEN_MANAGER = false;
+  USER_CHAR_STREAM = false;
+  BUILD_PARSER = true;
+  BUILD_TOKEN_MANAGER = true;
+  SANITY_CHECK = true;
+  FORCE_LA_CHECK = false;
+}
+
+PARSER_BEGIN(Hilferuf)
+
+public class Hilferuf {
+
+  public static void main(String args[]) throws ParseException {
+    System.out.println("Beenden Sie die Eingabe durch Return und dann Ctrl-Z (Windows) bzw. Ctrl-D (Unix):");
+    Hilferuf parser = new Hilferuf(System.in);
+    parser.Input();
+  }
+
+}
+
+PARSER_END(Hilferuf)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+<DEFAULT> MORE : 
+{ 
+  "a" : A
+| "b" : END  
+}
+
+/**
+ *
+ * TOKEN FUER MORSEALPHABET
+ *
+ */
+
+<DEFAULT> TOKEN :
+{
+  <PNT : ".">
+}
+
+// Doppelhash's kontrolliert der Parser
+<DEFAULT> TOKEN :
+{
+   <HASH : "#" >
+}
+
+<DEFAULT> TOKEN :
+{
+   <UNDERSCORE : "_">
+}
+
+
+/**
+ * 
+ */
+
+
+
+
+
+<DEFAULT>
+
+<END> MORE :
+{
+  "a" : A
+| "b" : A
+}
+
+<END> TOKEN :
+{
+  <Wort : "."> : DEFAULT
+}
+
+void Input() :
+{}
+{
+  <Wort> <EOF>
+}
