@@ -219,7 +219,7 @@ void start() :
 {}
 {
   // bGrad() lGrad() "#" sos() "#" <EOL>
-  vorne() bGrad() sos() "#"<EOL>
+  vorne() bGrad() lGrad() sos() "#" <EOL>
 }
 
 void bGrad() : 
@@ -265,4 +265,3 @@ void weiter3() :
 {
   <MZ> "#" weiter2()
 }
-
