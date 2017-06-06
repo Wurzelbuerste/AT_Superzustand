@@ -1,11 +1,11 @@
 options {
-  LOOKAHEAD = 1;
+  LOOKAHEAD = 2;
   CHOICE_AMBIGUITY_CHECK = 2;
   OTHER_AMBIGUITY_CHECK = 1;
   STATIC = true;
   DEBUG_PARSER = false;
   DEBUG_LOOKAHEAD = false;
-  DEBUG_TOKEN_MANAGER = false;
+  DEBUG_TOKEN_MANAGER = true;
   ERROR_REPORTING = true;
   JAVA_UNICODE_ESCAPE = false;
   UNICODE_INPUT = false;
@@ -47,87 +47,222 @@ SKIP :
  */ 
 <DEFAULT>
 
-TOKEN :
-{
-  <KURZ : "."> : DEFAULT
-}
+
+/* MORSEALPHABET in der Art nur fuer SOS benoetigt
+ *
+ * ACHTUNG!! Fuer Wort wird nur ein Token mit erlaubten Morsezeichen verwendet
+ */
 
 
-TOKEN :
-{
-  <HASH : "#"> : DEFAULT
-}
+	
 
-TOKEN :
-{
-  <LANG: "_"> : DEFAULT
-}
 
-/*
-TOKEN :
-{
-  <M_SIGN : "." | "_">
-}
-*/
+
+
 
 /*
  * Entwurf von Dienstag
  * --------------------
- * BGrad := ([1-8]?[0-9]|90)°[1-9]?[0-9](.[0-9]*)?#[_.|...]#
- * LGrad := (1?[1-7]?[0-9]|180|[8-9][0-9])°[1-9]?[0-9](.[0-9]*)?#[.__|___]#
+ * BGrad := ([1-8]?[0-9]|90)°[1-9]?[0-9](.[1-9][0-9]* | .0)#[_.|...]#
+ * LGrad := (1?[1-7]?[0-9]|180|[8-9][0-9])°[1-9]?[0-9](.[1-9][0-9]* | .0)#[.__|___]#
  *
  * S := (...#)
  * O := (___#)
  * #SOS := (...#)+(___#)(...#)+
  *
- * ([.|_|#]* ##)? <BGrad> # <LGrad> # <S>+ <O> <S>+ # ([.|_|#]*)
+ *											
+ * ([.|_|#]* ##)? <BGrad> # <LGrad> # <S>+ <O> <S>+ # (.|_|#)*
  *
- * void Word() :
- * {}
- * {
- *     (Word() MorseChar()) | (MorseChar() "#")
- * }
- *
- * void MorseChar()
- * {}
- * {
- *     (("_"|".") MorseChar()) | ((.|_) "#")
- * }
- * void SOS() :
- * {}
- * {
- *     "S"  SOS()  "S" | "SOS"
- * }
  */
-
-/**
- * ZAHLEN
- * 0 ist Sonderfall
- */
-
-TOKEN :
-{
-  <ZAHL : ["1"-"9"]> :  DEFAULT
-}
-
-TOKEN :
-{
-  <NULL : "0"> : DEFAULT
-}
-
-TOKEN :
-{
-  <GRAD : "°"> : DEFAULT
-}
-
+ 
 TOKEN :
 {
   <EOL : "\n" | "\r" | "\r\n">
 }
 
+//---------------------------------//
+/*<DEFAULT>
+TOKEN : { <DOPPELHASH : "##"> : ZUSTAND2 }
 
-void start() :
+<DEFAULT, ZUSTAND2>TOKEN : 
+{
+  <M_SIGN : (("._"  | "_..." | "_._." | "_.." |  "."  |
+  			 ".._." | "__."  | "...." | ".."  | ".___"|
+  			  "_._" | "._.." | "__"   | "_."  | "___" |
+  			 ".__." | "__._" | "._."  | "..." | "_"   |
+  			  ".._" | "..._" | ".__"  | "_.._"| "_.__"|
+  			  "__..")> : ZUSTAND3 
+}
+
+TOKEN : { <Zahlen_8 : ["1" - "8"]> : ZUSTAND2 }
+TOKEN : { <NEUN : "9"> }
+<DEFAULT,ZUSTAND2> TOKEN : { <NULL : "0"> }					// Gemeinsam akzeptierte Token
+TOKEN : { <GRAD : "°"> }
+
+
+<ZUSTAND3>
+TOKEN :
+{
+  <HASH :>
+}
+<ZUSTAND2>
+TOKEN :
+{
+  <A : "._"  >| <B : "_..."> | <C : "_._.">| <D : "_.." >|
+  <E : "."   >| <F : ".._."> | <G : "__." >| <H : "....">|
+  <I : ".."  >| <J : ".___"> | <K : "_._" >| <L : "._..">|
+  <M : "__"  >| <N : "_."  > | <O : "___" >| <P : ".__.">|
+  <Q : "__._">| <R : "._." > | <S : "..." >| <T : "_"   >|
+  <U : ".._" >| <V : "..._"> | <W : ".__" >| <X : "_.._">|
+  <Y : "_.__">| <Z : "__..">  
+}
+TOKEN : { <HASH : "#"> : DEFAULT } 
+TOKEN : { <ZAHLEN_9 : ["1"-"9"]> : ZUSTAND2}
+TOKEN : { <KOMMA : ","> }
+TOKEN : { <PUNKT : "."> }
+TOKEN : { <NoS : (<N>|<S>)>}		// Norden oder Sueden
+
+
+
+void Start()
 {}
 {
-  <ZAHL> <ZAHL> <EOL>
+  M() E() <EOF>
 }
+
+void M()
+{}
+{
+  Wort_BGrad() Min_Sek() SOS()
+}
+
+
+
+
+void SOS()
+{
+  W() //RAUTE
+}
+
+void E()
+{
+  
+}
+*/
+
+<DEFAULT>
+
+/*TOKEN :
+{
+  <HASH: "#"> : ZUSTAND2
+}
+
+*/
+
+
+TOKEN :
+{
+  <B_GRADZAHL : (["1"-"8"])?["0"-"9"] | "90">
+}
+
+TOKEN :
+{
+  <GRAD_MIN : (["1"-"9"])?["0"-"9"]>
+}
+
+
+TOKEN :
+{
+  <GRAD_SEK : (["1"-"9"])?["0"-"9"]"."["1"-"9"](["0"-"9"])* | "0">
+}  
+
+TOKEN :
+{
+  <NS : "_." | "...">
+}
+
+
+TOKEN :
+{
+  <OW : "___" | ".__">
+}
+
+TOKEN :
+{
+  <L_GRADZAHL : ("1")?(["1"-"7"])?["0"-"9"]|"180"|["8"-"9"]["0"-"9"]>
+}
+
+TOKEN :
+{
+  <S : "...#">
+}
+
+TOKEN :
+{
+  <O : "___#">
+}
+
+TOKEN :					 			// MZ = Morsezeichen
+{
+  <MZ : ( "._"  | "_..." | "_._." | "_.." |  "."  |
+  		 ".._." | "__."  | "...." | ".."  | ".___"|
+  		  "_._" | "._.." | "__"   | "_."  | "___" |
+  		 ".__." | "__._" | "._."  | "..." | "_"   |
+  		  ".._" | "..._" | ".__"  | "_.._"| "_.__"|
+  		  "__..")>
+}
+
+
+/* PARSER */
+
+void start() : 
+{}
+{
+  // bGrad() lGrad() "#" sos() "#" <EOL>
+  vorne() bGrad() sos() "#"<EOL>
+}
+
+void bGrad() : 
+{}
+{
+  <B_GRADZAHL> "\u00b0" <GRAD_SEK> "#" <NS> "#"
+}
+
+void lGrad() : 
+{}
+{
+  <L_GRADZAHL> "\u00b0" <GRAD_SEK> "#" <OW> "#"
+}
+
+
+void sos() :
+{}
+{
+  <S> sos() <S> | <S> <O> <S>
+}
+ 
+
+void vorne() :
+{}
+{
+  "#" "#" [weiter()] | <MZ> "#" weiter2()
+}
+
+void weiter() :
+{}
+{
+  <MZ> "#" weiter2()
+}
+
+void weiter2() :
+{}
+{
+  "#" [weiter3()] | <MZ> "#" weiter2()
+}
+
+void weiter3() : 
+{}
+{
+  <MZ> "#" weiter2()
+}
+
