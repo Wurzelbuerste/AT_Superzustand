@@ -1,11 +1,11 @@
 options {
-  LOOKAHEAD = 2;
+  LOOKAHEAD = 1;
   CHOICE_AMBIGUITY_CHECK = 2;
   OTHER_AMBIGUITY_CHECK = 1;
   STATIC = true;
   DEBUG_PARSER = false;
   DEBUG_LOOKAHEAD = false;
-  DEBUG_TOKEN_MANAGER = true;
+  DEBUG_TOKEN_MANAGER = false;
   ERROR_REPORTING = true;
   JAVA_UNICODE_ESCAPE = false;
   UNICODE_INPUT = false;
@@ -18,19 +18,19 @@ options {
   FORCE_LA_CHECK = false;
 }
 
-PARSER_BEGIN(Hilferuf)
+PARSER_BEGIN(HilferufParser)
 
-public class Hilferuf {
+public class HilferufParser {
 
   public static void main(String args[]) throws ParseException {
     System.out.println("Beenden Sie die Eingabe durch Return und dann Ctrl-Z (Windows) bzw. Ctrl-D (Unix):");
-    Hilferuf parser = new Hilferuf(System.in);
-    parser.start();
+    HilferufParser parser = new HilferufParser(System.in);
+    parser.Input();
   }
 
 }
 
-PARSER_END(Hilferuf)
+PARSER_END(HilferufParser)
 
 SKIP :
 {
@@ -160,36 +160,69 @@ void E()
 */
 
 
+
+/*
+TOKEN:
+{
+  <LOCATION: ((["1"-"8"])?["0"-"9"] | "90") "\u00b0"										// Breitengrad
+  			 ((["1"-"9"])?["0"-"9"]"."["1"-"9"](["0"-"9"])* | "0") "#" ("_." | "...") "#"		
+			 (("1")?(["1"-"7"])?["0"-"9"]|"180"|["8"-"9"]["0"-"9"]) "\u00b0"					// Laengengrad
+ 			 ((["1"-"9"])?["0"-"9"]"."["1"-"9"](["0"-"9"])* | "0") "#" ("___" | ".__") "#"	
+			 >
+}
+*/
+
+
 TOKEN :
 {
-  <B_GRADZAHL : (["1"-"8"])?["0"-"9"] | "90">
+  <B_GRADZAHL : ((["1"-"8"])?["0"-"9"] | "90") "\u00b0">
 }
 
 TOKEN :
 {
-  <GRAD_MIN : (["1"-"9"])?["0"-"9"]>
+  <L_GRADZAHL : (("1")?(["1"-"7"])?["0"-"9"]|"180"|["8"-"9"]["0"-"9"]) "\u00b0" >
+}
+
+TOKEN :
+{
+  <GRAD_MIN : ((["1"-"9"])?["0"-"9"]) ".">
 }
 
 
 TOKEN :
 {
-  <GRAD_SEK : (["1"-"9"])?["0"-"9"]"."["1"-"9"](["0"-"9"])* | "0">
-}  
-
-TOKEN :
-{
-  <NS : "_." | "...">
+  <GRAD_SEK : (["1"-"9"](["0"-"9"])* | "0") "#">
 }
 
-
-TOKEN :
+/*
+TOKEN :		// 0 - 99
 {
-  <OW : "___" | ".__">
+  <ZAHLEN_90 : (["1"-"8"])?["0"-"9"] | "90">
 }
 
 TOKEN :
 {
-  <L_GRADZAHL : ("1")?(["1"-"7"])?["0"-"9"]|"180"|["8"-"9"]["0"-"9"]>
+  <ZAHLEN_99: "9"["1"-"9"]>
+}
+
+TOKEN :	// 100 -180
+{
+  <ZAHLEN_180: "1"["0"-"7"]["0"-"9"] | "180">
+}
+
+TOKEN :	// 181 - 999
+{
+  <ZAHLEN_999: ("1"["8"-"9"]["0"-"9"]) | ["2"-"9"]["0"-"9"]["0"-"9"]>
+}
+*/
+TOKEN :
+{
+  <N : "_.#">
+}
+
+TOKEN :
+{
+  <W : ".__#">
 }
 
 TOKEN :
@@ -206,62 +239,77 @@ TOKEN :					 			// MZ = Morsezeichen
 {
   <MZ : ( "._"  | "_..." | "_._." | "_.." |  "."  |
   		 ".._." | "__."  | "...." | ".."  | ".___"|
-  		  "_._" | "._.." | "__"   | "_."  | "___" |
-  		 ".__." | "__._" | "._."  | "..." | "_"   |
-  		  ".._" | "..._" | ".__"  | "_.._"| "_.__"|
-  		  "__..")>
+  		  "_._" | "._.." | "__"   | 		 			// Hier war N & O
+  		 ".__." | "__._" | "._."  		  | "_"   |		// hier war S
+  		  ".._" | "..._" | "_.._"| "_.__"|				// Hier war W
+  		  "__..") "#">
 }
 
 
 /* PARSER */
 
-void start() : 
+void Input() : 
 {}
 {
   // bGrad() lGrad() "#" sos() "#" <EOL>
-  vorne() bGrad() lGrad() sos() "#" <EOL>
+  [worte()] bGrad() lGrad() "#" sos() "#" [hinten()] <EOL>
 }
 
 void bGrad() : 
 {}
 {
-  <B_GRADZAHL> "\u00b0" <GRAD_SEK> "#" <NS> "#"
+  <B_GRADZAHL> <GRAD_MIN> <GRAD_SEK> (<N> | <S>)
 }
 
-void lGrad() : 
+void lGrad() :  	
 {}
 {
-  <L_GRADZAHL> "\u00b0" <GRAD_SEK> "#" <OW> "#"
+  (<L_GRADZAHL> | <B_GRADZAHL> ) <GRAD_MIN> <GRAD_SEK> (<O> | <W>)
 }
-
 
 void sos() :
 {}
 {
-  <S> sos() <S> | <S> <O> <S>
+  <S> ( sos() | <O> ) <S> 
 }
  
 
-void vorne() :
+void worte() :
 {}
 {
-  "#" "#" [weiter()] | <MZ> "#" weiter2()
+  ("#" | wort()) "#" [worte()]
 }
 
-void weiter() :
+void wort() :
+{}
+{    morseZeichen() [wort()]
+}
+
+void hinten() :
 {}
 {
-  <MZ> "#" weiter2()
+  wort() "#" [worte()]
 }
+
+
+/*
+
 
 void weiter2() :
 {}
 {
-  "#" [weiter3()] | <MZ> "#" weiter2()
+  "#" [weiter3()] | morseZeichen() weiter2()
 }
 
 void weiter3() : 
 {}
 {
-  <MZ> "#" weiter2()
+  morseZeichen() "#" weiter2()
+}
+
+*/
+void morseZeichen() : 
+{}
+{
+	(<MZ> | <N> | <S> | <O> | <W>)
 }
