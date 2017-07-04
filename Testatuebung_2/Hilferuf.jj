@@ -3,7 +3,7 @@ options {
   CHOICE_AMBIGUITY_CHECK = 2;
   OTHER_AMBIGUITY_CHECK = 1;
   STATIC = true;
-  DEBUG_PARSER = false;
+  DEBUG_PARSER = true;
   DEBUG_LOOKAHEAD = false;
   DEBUG_TOKEN_MANAGER = false;
   ERROR_REPORTING = true;
@@ -77,7 +77,7 @@ SKIP :
  
 TOKEN :
 {
-  <EOL : "\n" | "\r" | "\r\n">
+  <EOL : "\n" | "\r" | "\r\n" | "\0">
 }
 
 //---------------------------------//
@@ -212,7 +212,7 @@ TOKEN :
 
 TOKEN :
 {
-  <L_GRADZAHL : (("1")?(["1"-"7"])?["0"-"9"]|"180"|["8"-"9"]["0"-"9"]) "\u00b0" >
+  <L_GRADZAHL : (("1")?(["1"-"7"])?["0"-"9"]|["8"-"9"]["0"-"9"]| "180") "\u00b0" >
 }
 
 // ([<EINS>] [<ZAHLEN2_7>] nullBisNeun() | <EINS> <ACHT> <NULL> | (<ACHT> | <NEUN>) nullBisNeun()) "\u00b0"
@@ -291,7 +291,7 @@ void Input() :
 {}
 {
   // bGrad() lGrad() "#" sos() "#" <EOL>
-  [worte()] bGrad() lGrad() "#" sos() "#" [hinten()] <EOL>
+  [worte()] bGrad() lGrad() "#" sos() "#" [hinten()] <EOF>
 }
 
 /*
@@ -313,7 +313,7 @@ void lGrad() :
 {}
 {
   //([<EINS>] [<ZAHLEN2_7>] nullBisNeun() | <EINS> <ACHT> <NULL> | (<ACHT> | <NEUN>) nullBisNeun()) "\u00b0"
-  (<L_GRADZAHL> | <B_GRADZAHL> ) <GRAD_MIN> <GRAD_SEK> "#" (<O> | <W>)
+  ((<L_GRADZAHL> | <B_GRADZAHL> ) <GRAD_MIN> <GRAD_SEK> "#") (<O> | <W>)
 }
 
 /*
@@ -345,7 +345,7 @@ void sos() :
 void worte() :
 {}
 {
-  ("#" | wort()) "#" [worte()]
+  ("#" | wort() "#") [worte()]
 }
 
 void wort() :
@@ -353,11 +353,13 @@ void wort() :
 {    morseZeichen() [wort()]
 }
 
+
 void hinten() :
 {}
 {
-  wort() [worte()]
+  morseZeichen() ["#"] [hinten()]
 }
+
 
 
 /*
