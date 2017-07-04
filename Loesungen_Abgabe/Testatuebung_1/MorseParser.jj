@@ -1,0 +1,158 @@
+options {
+  LOOKAHEAD = 1;
+  CHOICE_AMBIGUITY_CHECK = 2;
+  OTHER_AMBIGUITY_CHECK = 1;
+  STATIC = true;
+  DEBUG_PARSER = false;
+  DEBUG_LOOKAHEAD = false;
+  DEBUG_TOKEN_MANAGER = false;
+  ERROR_REPORTING = true;
+  JAVA_UNICODE_ESCAPE = false;
+  UNICODE_INPUT = false;
+  IGNORE_CASE = false;
+  USER_TOKEN_MANAGER = false;
+  USER_CHAR_STREAM = false;
+  BUILD_PARSER = true;
+  BUILD_TOKEN_MANAGER = true;
+  SANITY_CHECK = true;
+  FORCE_LA_CHECK = false;
+}
+
+PARSER_BEGIN(MorseParser)
+
+public class MorseParser {
+
+  public static void main(String args[]) throws ParseException {
+    System.out.println("Beenden Sie die Eingabe durch Return und dann Ctrl-Z (Windows) bzw. Ctrl-D (Unix):");
+    MorseParser parser = new MorseParser(System.in);
+    parser.Input();
+  }
+
+}
+
+PARSER_END(MorseParser)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+<DEFAULT,B,C,E,F,G,I,J,K,RAUTE> MORE : 
+{ 
+  "#" : DOPPELRAUTE
+}
+
+<D,H,L,M> MORE :
+{
+  "." : RAUTE
+| "_" : RAUTE
+}
+
+<DEFAULT,B,C,I,J,K> MORE :
+{
+  "_" : RAUTE
+}
+
+<E,F,G> MORE :
+{
+  "." : RAUTE
+}
+
+<RAUTE> MORE :
+{
+  "." : RAUTE
+| "_" : RAUTE
+}
+
+<DOPPELRAUTE> MORE :
+{
+  "." : RAUTE 
+| "#" : DEFAULT
+| "_" : RAUTE
+}
+
+<DEFAULT> MORE :
+{
+  "." : B  
+}
+
+<B> MORE :
+{
+  "." : C
+}
+
+<C> MORE :
+{
+  "." : D
+}
+
+<D> MORE :
+{
+  "#" : E
+}
+
+<E> MORE :
+{
+  "_" : F
+}
+
+<F> MORE :
+{
+  "_" : G
+}
+
+<G> MORE :
+{
+  "_" : H
+}
+
+<H> MORE :
+{
+  "#" : I
+}
+
+<I> MORE :
+{
+  "." : J
+}
+
+<J> MORE :
+{
+  "." : K
+}
+
+<K> MORE :
+{
+  "." : L
+}
+
+<L> MORE :
+{
+  "#" : M
+}
+
+<M> MORE :
+{
+  "#" : END
+}
+
+<END> MORE :
+{
+  "." : END
+| "#" : END
+| "_" : END
+}
+
+<END> TOKEN :
+{
+  <Wort : ";"> : DEFAULT
+}
+
+void Input() :
+{}
+{
+  <Wort> <EOF>
+}

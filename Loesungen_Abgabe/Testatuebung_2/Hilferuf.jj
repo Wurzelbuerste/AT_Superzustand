@@ -1,0 +1,385 @@
+options {
+  LOOKAHEAD = 1;
+  CHOICE_AMBIGUITY_CHECK = 2;
+  OTHER_AMBIGUITY_CHECK = 1;
+  STATIC = true;
+  DEBUG_PARSER = true;
+  DEBUG_LOOKAHEAD = false;
+  DEBUG_TOKEN_MANAGER = false;
+  ERROR_REPORTING = true;
+  JAVA_UNICODE_ESCAPE = false;
+  UNICODE_INPUT = false;
+  IGNORE_CASE = false;
+  USER_TOKEN_MANAGER = false;
+  USER_CHAR_STREAM = false;
+  BUILD_PARSER = true;
+  BUILD_TOKEN_MANAGER = true;
+  SANITY_CHECK = true;
+  FORCE_LA_CHECK = false;
+}
+
+PARSER_BEGIN(HilferufParser)
+
+public class HilferufParser {
+
+  public static void main(String args[]) throws ParseException {
+    System.out.println("Beenden Sie die Eingabe durch Return und dann Ctrl-Z (Windows) bzw. Ctrl-D (Unix):");
+    HilferufParser parser = new HilferufParser(System.in);
+    parser.Input();
+  }
+
+}
+
+PARSER_END(HilferufParser)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+/**
+ *
+ * TOKEN FUER MORSEALPHABET
+ *
+ */ 
+<DEFAULT>
+
+
+/* MORSEALPHABET in der Art nur fuer SOS benoetigt
+ *
+ * ACHTUNG!! Fuer Wort wird nur ein Token mit erlaubten Morsezeichen verwendet
+ */
+
+
+	
+
+
+
+
+
+/*
+ * Entwurf von Dienstag
+ * --------------------
+ * BGrad := ([1-8]?[0-9]|90)°[1-9]?[0-9](.[1-9][0-9]* | .0)#[_.|...]#
+ * LGrad := (1?[1-7]?[0-9]|180|[8-9][0-9])°[1-9]?[0-9](.[1-9][0-9]* | .0)#[.__|___]#
+ *
+ * S := (...#)
+ * O := (___#)
+ * #SOS := (...#)+(___#)(...#)+
+ *
+ *											
+ * ([.|_|#]* ##)? <BGrad> # <LGrad> # <S>+ <O> <S>+ # (.|_|#)*
+ *
+ */
+ 
+TOKEN :
+{
+  <EOL : "\n" | "\r" | "\r\n" | "\0">
+}
+
+//---------------------------------//
+/*<DEFAULT>
+TOKEN : { <DOPPELHASH : "##"> : ZUSTAND2 }
+
+<DEFAULT, ZUSTAND2>TOKEN : 
+{
+  <M_SIGN : (("._"  | "_..." | "_._." | "_.." |  "."  |
+  			 ".._." | "__."  | "...." | ".."  | ".___"|
+  			  "_._" | "._.." | "__"   | "_."  | "___" |
+  			 ".__." | "__._" | "._."  | "..." | "_"   |
+  			  ".._" | "..._" | ".__"  | "_.._"| "_.__"|
+  			  "__..")> : ZUSTAND3 
+}
+
+TOKEN : { <Zahlen_8 : ["1" - "8"]> : ZUSTAND2 }
+TOKEN : { <NEUN : "9"> }
+<DEFAULT,ZUSTAND2> TOKEN : { <NULL : "0"> }					// Gemeinsam akzeptierte Token
+TOKEN : { <GRAD : "°"> }
+
+
+<ZUSTAND3>
+TOKEN :
+{
+  <HASH :>
+}
+<ZUSTAND2>
+TOKEN :
+{
+  <A : "._"  >| <B : "_..."> | <C : "_._.">| <D : "_.." >|
+  <E : "."   >| <F : ".._."> | <G : "__." >| <H : "....">|
+  <I : ".."  >| <J : ".___"> | <K : "_._" >| <L : "._..">|
+  <M : "__"  >| <N : "_."  > | <O : "___" >| <P : ".__.">|
+  <Q : "__._">| <R : "._." > | <S : "..." >| <T : "_"   >|
+  <U : ".._" >| <V : "..._"> | <W : ".__" >| <X : "_.._">|
+  <Y : "_.__">| <Z : "__..">  
+}
+TOKEN : { <HASH : "#"> : DEFAULT } 
+TOKEN : { <ZAHLEN_9 : ["1"-"9"]> : ZUSTAND2}
+TOKEN : { <KOMMA : ","> }
+TOKEN : { <PUNKT : "."> }
+TOKEN : { <NoS : (<N>|<S>)>}		// Norden oder Sueden
+
+
+
+void Start()
+{}
+{
+  M() E() <EOF>
+}
+
+void M()
+{}
+{
+  Wort_BGrad() Min_Sek() SOS()
+}
+
+
+
+
+void SOS()
+{
+  W() //RAUTE
+}
+
+void E()
+{
+  
+}
+*/
+
+<DEFAULT>
+
+/*TOKEN :
+{
+  <HASH: "#"> : ZUSTAND2
+}
+
+*/
+
+
+
+/*
+TOKEN:
+{
+  <LOCATION: ((["1"-"8"])?["0"-"9"] | "90") "\u00b0"										// Breitengrad
+  			 ((["1"-"9"])?["0"-"9"]"."["1"-"9"](["0"-"9"])* | "0") "#" ("_." | "...") "#"		
+			 (("1")?(["1"-"7"])?["0"-"9"]|"180"|["8"-"9"]["0"-"9"]) "\u00b0"					// Laengengrad
+ 			 ((["1"-"9"])?["0"-"9"]"."["1"-"9"](["0"-"9"])* | "0") "#" ("___" | ".__") "#"	
+			 >
+}
+*/
+
+/*
+// Zahlen-Token
+TOKEN :
+{
+  <NULL : "0">
+}
+
+TOKEN :
+{
+  <EINS : "1">
+}
+
+TOKEN :
+{
+  <ZAHLEN2_7 : ["2" - "7"]>
+}
+
+TOKEN :
+{
+  <ACHT : "8">
+}
+
+TOKEN :
+{
+  <NEUN : "9">
+}
+
+
+*/
+
+
+TOKEN :
+{
+  <B_GRADZAHL : ((["1"-"8"])?["0"-"9"] | "90") "\u00b0">
+}
+
+
+
+TOKEN :
+{
+  <L_GRADZAHL : (("1")?(["1"-"7"])?["0"-"9"]|["8"-"9"]["0"-"9"]| "180") "\u00b0" >
+}
+
+// ([<EINS>] [<ZAHLEN2_7>] nullBisNeun() | <EINS> <ACHT> <NULL> | (<ACHT> | <NEUN>) nullBisNeun()) "\u00b0"
+
+TOKEN :
+{
+  <GRAD_MIN : ((["1"-"9"])?["0"-"9"]) ".">
+}
+// [(<EINS> | <ZAHLEN2_7> | <ACHT> | <NEUN>)] nullBisNeun() "."
+
+
+
+
+TOKEN :
+{
+  <GRAD_SEK : (["1"-"9"](["0"-"9"])* | "0")>
+}
+
+// (( <EINS> | <ZAHLEN2_7> | <ACHT> | <NEUN> )[nullBisNeun()][nullBisNeun()]) | <NULL>) "#"
+
+/*
+TOKEN :		// 0 - 99
+{
+  <ZAHLEN_90 : (["1"-"8"])?["0"-"9"] | "90">
+}
+
+TOKEN :
+{
+  <ZAHLEN_99: "9"["1"-"9"]>
+}
+
+TOKEN :	// 100 -180
+{
+  <ZAHLEN_180: "1"["0"-"7"]["0"-"9"] | "180">
+}
+
+TOKEN :	// 181 - 999
+{
+  <ZAHLEN_999: ("1"["8"-"9"]["0"-"9"]) | ["2"-"9"]["0"-"9"]["0"-"9"]>
+}
+*/
+TOKEN :
+{
+  <N : "_.#">
+}
+
+TOKEN :
+{
+  <W : ".__#">
+}
+
+TOKEN :
+{
+  <S : "...#">
+}
+
+TOKEN :
+{
+  <O : "___#">
+}
+
+TOKEN :					 			// MZ = Morsezeichen
+{
+  <MZ : ( "._"  | "_..." | "_._." | "_.." |  "."  |
+  		 ".._." | "__."  | "...." | ".."  | ".___"|
+  		  "_._" | "._.." | "__"   | 		 			// Hier war N & O
+  		 ".__." | "__._" | "._."  		  | "_"   |		// hier war S
+  		  ".._" | "..._" | "_.._"| "_.__"|				// Hier war W
+  		  "__..") "#">
+}
+
+
+/* PARSER */
+
+void Input() : 
+{}
+{
+  // bGrad() lGrad() "#" sos() "#" <EOL>
+  [worte()] bGrad() lGrad() "#" sos() "#" [hinten()] <EOF>
+}
+
+/*
+void nullBisNeun() : 
+{}
+{
+    <NULL> | <EINS> | <ZAHLEN2_7> | <ACHT> | <NEUN>
+}
+*/
+
+void bGrad() : 
+{}
+{
+  //((<EINS> | <ZAHLEN2_7> | <ACHT>) nullBisNeun() | nullBisNeun() | <NEUN> <NULL>) "\u00b0" 
+  <B_GRADZAHL> <GRAD_MIN> <GRAD_SEK> "#" (<N> | <S>)
+}
+
+void lGrad() :  	
+{}
+{
+  //([<EINS>] [<ZAHLEN2_7>] nullBisNeun() | <EINS> <ACHT> <NULL> | (<ACHT> | <NEUN>) nullBisNeun()) "\u00b0"
+  ((<L_GRADZAHL> | <B_GRADZAHL> ) <GRAD_MIN> <GRAD_SEK> "#") (<O> | <W>)
+}
+
+/*
+void gradMin() :
+{}
+{
+  [(<EINS> | <ZAHLEN2_7> | <ACHT> | <NEUN>)] nullBisNeun() "."
+}
+*/
+
+/*
+void zahl()
+<EINS> zahl() (<ZAHLEN2_7>) |  (<EINS> | <ZAHLEN2_7>) () | <EINS> <EINS> | <EINS> 
+
+void gradSec() :
+{}
+{
+  ((( <EINS> | <ZAHLEN2_7> | <ACHT> | <NEUN> )[nullBisNeun()][nullBisNeun()]) | <NULL>)
+} 
+*/
+
+void sos() :
+{}
+{
+  <S> ( sos() | <O> ) <S> 
+}
+ 
+
+void worte() :
+{}
+{
+  ("#" | wort() "#") [worte()]
+}
+
+void wort() :
+{}
+{    morseZeichen() [wort()]
+}
+
+
+void hinten() :
+{}
+{
+  morseZeichen() ["#"] [hinten()]
+}
+
+
+
+/*
+
+
+void weiter2() :
+{}
+{
+  "#" [weiter3()] | morseZeichen() weiter2()
+}
+
+void weiter3() : 
+{}
+{
+  morseZeichen() "#" weiter2()
+}
+
+*/
+void morseZeichen() : 
+{}
+{
+	(<MZ> | <N> | <S> | <O> | <W>)
+}
